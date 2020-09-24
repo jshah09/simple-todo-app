@@ -2,29 +2,15 @@ import React from 'react';
 import TodoList from './TodoList';
 import Header from './Header.js';
 import InputTodo from './InputTodo.js';
-import {v4 as uuidv4} from 'uuid';
+//import {v4 as uuidv4} from 'uuid';
+import axios from "axios";
 
 class TodoContainer extends React.Component {
     constructor() {
         super();
         this.state = {
-            todos: [
-                {
-                    id : uuidv4(),
-                    title : "setup developement environment",
-                    completed : true
-                },
-                {
-                    id : uuidv4(),
-                    title : "develop website and add content",
-                    completed : false
-                },
-                {
-                    id : uuidv4(),
-                    title : "deploy to live server",
-                    completed : false
-                }                
-            ]
+            todos: [],
+            show : false
         };
     }
 
@@ -35,30 +21,39 @@ class TodoContainer extends React.Component {
                     todo.completed = !todo.completed;
                 }
                 return todo;
-            })
+            }),
+            show : !this.state.show
         });
     }
 
     delTodo = id => {
-        this.setState({
+        axios.delete(`https://jsonplaceholder.typicode.com/todos/${id}`)
+        .then( response => this.setState({
             todos: this.state.todos.filter(todo => todo.id !== id)
-        })
+        }))
+        
     }
 
     addTodo = title => {
-        const newTodo = {
-            id : uuidv4(),
+        axios.post("https://jsonplaceholder.typicode.com/todos", {
             title : title,
             completed : false
-        };
-        this.setState({
-            todos : [...this.state.todos, newTodo]
-        });
+        })
+        .then( response => this.setState({
+            todos : [...this.state.todos, response.data]
+            })
+        )
+        
+    }
+
+    componentDidMount() {
+        axios.get("https://jsonplaceholder.typicode.com/todos?_limit=10")
+        .then( response => this.setState({ todos : response.data }))
     }
     render() {
         return (
             <div className = "container">
-                <Header />
+                <Header headerSpan = {this.state.show} />
                 <InputTodo addTodoProps={this.addTodo} />
                 <TodoList todos={this.state.todos} handleChangeProps={this.handleChange} 
                 delTodoProps={this.delTodo}></TodoList>
